@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "asqav-langflow"
+version = "0.1.0"
+description = "Langflow custom component for Asqav - sign an agent action and return a cryptographic compliance receipt"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Asqav", email = "info@asqav.com" }
+]
+keywords = [
+    "ai",
+    "agents",
+    "langflow",
+    "governance",
+    "audit-trail",
+    "compliance",
+    "cryptographic-signing",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+# Only the thin Asqav SDK is a hard runtime dependency. Langflow itself is
+# heavy (it pulls in a large web stack) and is already present wherever this
+# component runs, so it is declared as an optional extra rather than a
+# mandatory install. The component resolves the Langflow base class at import
+# time and degrades to a local stub when Langflow is absent, which keeps the
+# package importable and unit-testable on its own.
+dependencies = [
+    "asqav>=0.5.4",
+]
+
+[project.optional-dependencies]
+# `langflow` is the peer host. Install it (or run inside an existing Langflow)
+# to use the component for real. It is intentionally not a hard dependency.
+langflow = ["langflow>=1.7.0"]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.5.0",
+]
+
+[project.urls]
+Homepage = "https://asqav.com"
+Documentation = "https://asqav.com/docs"
+Repository = "https://github.com/jagmarques/asqav-langflow"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/asqav_langflow"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
