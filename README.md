@@ -1,6 +1,6 @@
 # asqav-langflow
 
-A Langflow custom component that signs an agent action with [Asqav](https://asqav.com) and returns a verifiable cryptographic compliance receipt.
+Stop a rogue agent before it acts, and prove what it tried. A Langflow custom component that sends an agent action to [Asqav](https://asqav.com) for a policy decision: a permitted action returns a verifiable cryptographic receipt, and a denied action is refused server-side with a forensic record of the attempt rather than a permissive receipt.
 
 This package is built and maintained by the Asqav team. Asqav is the company behind the signed-receipt service the component calls. Using the component requires an Asqav API key.
 
