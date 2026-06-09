@@ -12,7 +12,7 @@ The package exposes one component, **Asqav Sign Action**. When it runs it:
 2. Calls the Asqav Python SDK: `asqav.init(api_key=...)`, `asqav.Agent.create(name)`, `agent.sign(action_type=..., context=...)`.
 3. Returns the receipt as a Langflow `Data` object so downstream components can record or display it.
 
-The SDK is thin and HTTP-only. All ML-DSA cryptography happens server-side at asqav.com. Only the values you pass in `context` are hashed into the receipt; nothing else from the flow travels.
+The SDK is thin and HTTP-only. All ML-DSA cryptography happens server-side at asqav.com. Only the values you pass in `context` are hashed into the receipt. Nothing else from the flow travels.
 
 ## Inputs
 
