@@ -2,6 +2,8 @@
 
 Stop a rogue agent before it acts, and prove what it tried. This Langflow custom component sends an agent action to [Asqav](https://asqav.com) for a policy decision. A permitted action returns a verifiable cryptographic receipt. A denied action is refused server-side and leaves a forensic record of the attempt, never a permissive receipt.
 
+Asqav governs the agents you wire through it. An agent that never routes through the governed path produces no receipt and is not detected.
+
 This package is built and maintained by the Asqav team. Asqav is the company behind the signed-receipt service the component calls. Using the component requires an Asqav API key.
 
 ## What it does
