@@ -42,7 +42,7 @@ classifiers = [
 # time and degrades to a local stub when Langflow is absent, which keeps the
 # package importable and unit-testable on its own.
 dependencies = [
-    "asqav>=0.5.4",
+    "asqav>=0.8.0,<0.9.0",
 ]
 
 [project.optional-dependencies]
