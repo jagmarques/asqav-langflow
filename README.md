@@ -37,16 +37,14 @@ If signing fails, the component does not abort the flow. It returns a `Data` obj
 
 ## Install
 
-Not yet on PyPI. Install from GitHub:
+```bash
+pip install asqav-langflow
+```
+
+If the PyPI release has not landed yet, install straight from GitHub instead:
 
 ```bash
 pip install "git+https://github.com/jagmarques/asqav-langflow.git"
-```
-
-Once published, the install will be:
-
-```bash
-pip install asqav-langflow
 ```
 
 Either way this installs the component and its only hard runtime dependency, the Asqav SDK (`asqav`).
