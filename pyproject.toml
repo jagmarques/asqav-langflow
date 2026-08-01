@@ -7,7 +7,7 @@ name = "asqav-langflow"
 version = "0.1.0"
 description = "Langflow custom component for Asqav - sign an agent action and return a cryptographic compliance receipt"
 readme = "README.md"
-license = "MIT"
+license = "Elastic-2.0"
 requires-python = ">=3.10"
 authors = [
     { name = "Asqav", email = "info@asqav.com" }
@@ -24,7 +24,7 @@ keywords = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: Other/Proprietary License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
