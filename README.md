@@ -6,7 +6,7 @@ The component is maintained by Asqav and requires an Asqav API key. Signing take
 
 ## Request and error behavior
 
-After local input checks pass, the signing method initializes the SDK and requests a new agent with the configured name. It uses that agent to request a signature for the action type and context. It does not reuse an agent from an earlier method call. Langflow can reuse a cached output, so reading the output again does not always make another request.
+After local input checks pass, the signing method initializes the SDK and requests a new agent with the configured name. It uses that agent to request a signature for the action type and context. Each signing-method call requests its own agent. Langflow can reuse a cached output, so reading the output again does not always make another request.
 
 A successful request returns a `Data` object with `signature_id`, `action_id`, `verification_url`, `timestamp`, and `algorithm`. These are fields from the SDK response, not the complete signing envelope. A successful response's policy decision is not an admission check in this component.
 
@@ -14,14 +14,16 @@ Missing required inputs, invalid context, and SDK errors return `Data` with an `
 
 ## Inputs and data handling
 
-- **Asqav API Key:** required secret input used to authenticate SDK requests.
+- **Asqav API Key:** required secret input for SDK authentication.
 - **Agent Name:** optional signing-agent name, defaulting to `langflow`.
 - **Action Type:** required action name, such as `api:call` or `tool:invoke`.
 - **Context (JSON):** optional JSON text containing an object that describes the action.
 
 With the SDK's default cloud configuration, signing uses hash-only mode: the request carries a digest, its algorithm and size, action/agent identifiers, and SDK metadata. Context entries such as `_model_name` and `_tool_name` opt into metadata forwarding. This is not a claim that only a hash leaves the process.
 
-The SDK also honors `ASQAV_MODE`. Setting it to `full-payload` sends the configured context in the request body. The component does not override SDK mode or an existing SDK base-URL setting. Other flow components and model providers handle their own traffic separately.
+The component reinitializes the SDK with automatic mode selection. A valid `ASQAV_MODE` takes precedence; without it, hostnames under `*.asqav.com` select hash-only mode and other API hostnames select full-payload mode. This can replace a mode chosen by another `asqav.init()` call. An existing SDK base URL is preserved.
+
+Set `ASQAV_MODE=hash-only` in the Langflow environment to require hashing before the signing request. `ASQAV_MODE=full-payload` sends the configured context in the request body. Other flow components and model providers handle their own traffic separately.
 
 ## Install from source
 
