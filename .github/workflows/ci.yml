@@ -39,7 +39,7 @@ jobs:
       - name: Build sdist and wheel (publish dry run)
         run: python -m build
       - name: Check package metadata
-        run: twine check dist/*
+        run: twine check --strict dist/*
 
   ci-ok:
     runs-on: ubuntu-latest
