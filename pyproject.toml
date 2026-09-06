@@ -5,10 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "asqav-langflow"
 version = "0.1.0"
-description = "Langflow custom component for Asqav - sign an agent action and return a cryptographic compliance receipt"
+description = "Langflow component that requests Asqav signing and returns response fields or error data"
 readme = "README.md"
 license = "Elastic-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.15"
 authors = [
     { name = "Asqav", email = "info@asqav.com" }
 ]
@@ -42,15 +42,17 @@ classifiers = [
 # time and degrades to a local stub when Langflow is absent, which keeps the
 # package importable and unit-testable on its own.
 dependencies = [
-    "asqav>=0.8.0,<0.9.0",
+    "asqav>=0.10.10,<0.11",
 ]
 
 [project.optional-dependencies]
 # `langflow` is the peer host. Install it (or run inside an existing Langflow)
 # to use the component for real. It is intentionally not a hard dependency.
-langflow = ["langflow>=1.7.0"]
+langflow = ["langflow>=1.12.0,<2"]
 dev = [
+    "lfx==1.12.0",
     "pytest>=8.0.0",
+    "pytest-asyncio>=0.24",
     "ruff>=0.5.0",
 ]
 
@@ -60,12 +62,14 @@ Documentation = "https://asqav.com/docs"
 Repository = "https://github.com/jagmarques/asqav-langflow"
 
 [tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
 include = [
     "/src",
     "/CHANGELOG.md",
 ]
 
 [tool.hatch.build.targets.wheel]
+core-metadata-version = "2.4"
 packages = ["src/asqav_langflow"]
 
 [tool.ruff]

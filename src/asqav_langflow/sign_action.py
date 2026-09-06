@@ -1,11 +1,7 @@
-"""Asqav Sign Action - a Langflow custom component.
+"""Request Asqav signing for configured action data and return selected response fields.
 
-Signs an agent action with Asqav (asqav.com) and returns the cryptographic
-compliance receipt. Built and maintained by the Asqav team.
-
-The Asqav Python SDK is thin and HTTP-only. All ML-DSA cryptography happens
-server-side at asqav.com. Only the values you pass in ``context`` are hashed
-into the receipt; nothing else from the flow travels.
+The SDK controls context serialization. Signing failures become Data(error);
+this component does not execute or gate another tool or verify the response.
 """
 
 from __future__ import annotations
@@ -13,7 +9,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from ._compat import (
+from asqav_langflow._compat import (
     Component,
     Data,
     MessageTextInput,
@@ -24,13 +20,12 @@ from ._compat import (
 
 
 class AsqavSignActionComponent(Component):
-    """Sign an agent action with Asqav and return the compliance receipt."""
+    """Submit action data to Asqav and return response fields or an error."""
 
     display_name: str = "Asqav Sign Action"
     description: str = (
-        "Sign an agent action with Asqav (asqav.com) and return the "
-        "cryptographic compliance receipt: signature id, action id, "
-        "verification URL, timestamp, and algorithm."
+        "Request Asqav signing for the configured action and context. "
+        "Returns selected response fields or error data; does not gate another tool."
     )
     documentation: str = "https://asqav.com/docs"
     icon: str = "shield-check"
@@ -60,8 +55,8 @@ class AsqavSignActionComponent(Component):
             name="context",
             display_name="Context (JSON)",
             info=(
-                "Optional JSON object describing the action. Only the values "
-                "you pass here are hashed into the receipt."
+                "Optional JSON object describing the action. The SDK's mode controls "
+                "whether the request carries a context hash or the full context."
             ),
             required=False,
         ),

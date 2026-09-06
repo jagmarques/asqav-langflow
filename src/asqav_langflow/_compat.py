@@ -7,11 +7,11 @@ importable and unit-testable without a full Langflow install, we resolve
 the real Langflow symbols when Langflow is present and fall back to small
 local stubs when it is not.
 
-Import resolution order, matching the Langflow docs:
+Import resolution order:
 
-1. Modern path (Langflow >= 1.7): ``lfx.custom.custom_component.component``
+1. Host path: ``lfx.custom.custom_component.component``
    and ``lfx.io`` / ``lfx.schema``.
-2. Classic path (still compatible): ``langflow.custom``, ``langflow.io``,
+2. Alternate host path: ``langflow.custom``, ``langflow.io``,
    ``langflow.schema``.
 3. Local stubs, so the module imports and tests run with no Langflow.
 
@@ -37,7 +37,7 @@ def _load_real() -> bool:
     global Component, SecretStrInput, MessageTextInput, MultilineInput
     global Output, Data
 
-    # Modern path (Langflow 1.7+).
+    # Component and IO types provided by the lfx runtime.
     try:
         from lfx.custom.custom_component.component import (  # type: ignore
             Component as _Component,
@@ -66,7 +66,7 @@ def _load_real() -> bool:
     except Exception:  # noqa: BLE001 - any failure means fall through
         pass
 
-    # Classic path (kept compatible by Langflow).
+    # Alternate import path exposed by the Langflow package.
     try:
         from langflow.custom import Component as _Component  # type: ignore
         from langflow.io import (  # type: ignore
@@ -136,8 +136,8 @@ class _StubComponent:
     """Minimal stand-in for the Langflow ``Component`` base class.
 
     Real Langflow injects input values as instance attributes by ``name``
-    and exposes a ``status`` attribute the editor displays. The stub keeps
-    those two behaviours so the component runs identically under test.
+    and exposes a ``status`` attribute the editor displays. This stub only
+    stores attributes; it does not model host validation or output dispatch.
     """
 
     inputs: list[Any] = []

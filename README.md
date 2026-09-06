@@ -1,101 +1,81 @@
 # asqav-langflow
 
-Stop a rogue agent before it acts, and prove what it tried. This Langflow custom component sends an agent action to [Asqav](https://asqav.com) for a policy decision. A permitted action returns a verifiable cryptographic receipt. A denied action is refused server-side and leaves a forensic record of the attempt, never a permissive receipt.
+A Langflow component that requests Asqav signing for configured action data and returns selected response fields as `Data`. It runs when Langflow evaluates its **Receipt** output. It does not execute or gate another tool, or establish that the described action happened.
 
-Asqav governs the agents you wire through it. An agent that never routes through the governed path produces no receipt and is not detected.
+The component is maintained by Asqav and requires an Asqav API key. Signing takes place on the Asqav server. The component does not independently verify a returned receipt.
 
-This package is built and maintained by the Asqav team. Asqav is the company behind the signed-receipt service the component calls. Using the component requires an Asqav API key.
+## Request and error behavior
 
-## What it does
+After local input checks pass, the signing method initializes the SDK and requests a new agent with the configured name. It uses that agent to request a signature for the action type and context. It does not reuse an agent from an earlier method call. Langflow can reuse a cached output, so reading the output again does not always make another request.
 
-The package exposes one component, **Asqav Sign Action**. When it runs it:
+A successful request returns a `Data` object with `signature_id`, `action_id`, `verification_url`, `timestamp`, and `algorithm`. These are fields from the SDK response, not the complete signing envelope. A successful response's policy decision is not an admission check in this component.
 
-1. Reads your Asqav API key from the component input.
-2. Calls the Asqav Python SDK: `asqav.init(api_key=...)`, `asqav.Agent.create(name)`, `agent.sign(action_type=..., context=...)`.
-3. Returns the receipt as a Langflow `Data` object so downstream components can record or display it.
+Missing required inputs, invalid context, and SDK errors return `Data` with an `error` key and set the component status. Those errors do not raise from the signing method. Downstream components must inspect the result and decide how to proceed. A failed request does not guarantee a receipt or forensic record.
 
-The SDK is thin and HTTP-only. All ML-DSA cryptography happens server-side at asqav.com. Only the values you pass in `context` are hashed into the receipt. Nothing else from the flow travels.
+## Inputs and data handling
 
-## Inputs
+- **Asqav API Key:** required secret input used to authenticate SDK requests.
+- **Agent Name:** optional signing-agent name, defaulting to `langflow`.
+- **Action Type:** required action name, such as `api:call` or `tool:invoke`.
+- **Context (JSON):** optional JSON text containing an object that describes the action.
 
-- **Asqav API Key** (secret, required): your Asqav API key (`sk_...`).
-- **Agent Name** (string, optional): name for the signing agent. Defaults to `langflow`.
-- **Action Type** (string, required): the action being signed, for example `api:call` or `tool:invoke`.
-- **Context (JSON)** (multiline, optional): a JSON object describing the action. Accepts a JSON string or an object.
+With the SDK's default cloud configuration, signing uses hash-only mode: the request carries a digest, its algorithm and size, action/agent identifiers, and SDK metadata. Context entries such as `_model_name` and `_tool_name` opt into metadata forwarding. This is not a claim that only a hash leaves the process.
 
-## Output
+The SDK also honors `ASQAV_MODE`. Setting it to `full-payload` sends the configured context in the request body. The component does not override SDK mode or an existing SDK base-URL setting. Other flow components and model providers handle their own traffic separately.
 
-A `Data` object whose `data` dict carries the key receipt fields:
+## Install from source
 
-- `signature_id`
-- `action_id`
-- `verification_url`
-- `timestamp`
-- `algorithm`
-
-If signing fails, the component does not abort the flow. It returns a `Data` object with an `error` key and sets the component status text, so the failure is visible without crashing the run.
-
-## Install
+Use Python 3.10 through 3.14 in the environment running Langflow 1.12 or later within the 1.x series:
 
 ```bash
-pip install asqav-langflow
+python -m pip install "git+https://github.com/jagmarques/asqav-langflow.git"
 ```
 
-If the PyPI release has not landed yet, install straight from GitHub instead:
+This installs the component and the Asqav SDK. It does not install the Langflow application. To install the application as well, request the extra from the same source:
 
 ```bash
-pip install "git+https://github.com/jagmarques/asqav-langflow.git"
+python -m pip install "asqav-langflow[langflow] @ git+https://github.com/jagmarques/asqav-langflow.git"
 ```
 
-Either way this installs the component and its only hard runtime dependency, the Asqav SDK (`asqav`).
+## Add the component
 
-Langflow itself is a heavy dependency (it pulls in a large web stack), so it is not installed automatically. The component is meant to run inside an existing Langflow install, which already provides the base class. If you want Langflow pulled in alongside the component, install the extra:
+Run this in a directory where you want to keep your custom components. It copies the installed component, so no repository-relative source path is needed:
+
+```python
+from importlib.util import find_spec
+from pathlib import Path
+from shutil import copyfile
+
+source = Path(find_spec("asqav_langflow.sign_action").origin)
+category = Path("custom_components/asqav")
+category.mkdir(parents=True, exist_ok=True)
+(category / "__init__.py").touch()
+copyfile(source, category / "sign_action.py")
+```
+
+Start Langflow with that components directory:
 
 ```bash
-pip install "asqav-langflow[langflow]"
+LANGFLOW_COMPONENTS_PATH="$PWD/custom_components" langflow run
 ```
 
-## Add the component to Langflow
+Find **Asqav Sign Action** in the custom component group, configure its inputs, and connect its **Receipt** output downstream. Keep the integration package installed: the copied file imports its helper through the `asqav_langflow` package name.
 
-Langflow discovers custom components from a directory you point it at with the `LANGFLOW_COMPONENTS_PATH` environment variable.
+You can also paste the installed `sign_action.py` contents into Langflow's custom-component editor in that same environment. Both routes use the same signing implementation.
 
-1. Install this package into the same environment as Langflow (see above).
-2. Copy or symlink `src/asqav_langflow/sign_action.py` into your components directory, for example:
+## Development and verification
 
-   ```bash
-   mkdir -p ~/.langflow/components/asqav
-   cp src/asqav_langflow/sign_action.py ~/.langflow/components/asqav/
-   ```
-
-3. Start Langflow pointing at that directory:
-
-   ```bash
-   LANGFLOW_COMPONENTS_PATH=~/.langflow/components langflow run
-   ```
-
-4. In the editor, the **Asqav Sign Action** component appears under your custom-components group. Drag it onto the canvas, paste your Asqav API key, set the action type, and connect the receipt output downstream.
-
-You can also paste the contents of `sign_action.py` directly into Langflow's built-in custom-component code editor.
-
-## SDK reference
-
-The component uses the public Asqav SDK surface:
-
-- `asqav.init(api_key=...)` to configure the client.
-- `asqav.Agent.create(name)` to create the signing agent.
-- `agent.sign(action_type=..., context=...)` which returns a `SignatureResponse` carrying `signature_id`, `action_id`, `verification_url`, `timestamp`, and `algorithm`.
-
-Get your API key at asqav.com.
-
-## Development
+From a checkout:
 
 ```bash
-pip install -e ".[dev]"
-python -m pytest -q   # mocks the SDK, no live calls
+python -m pip install -e ".[dev]"
+python -m pytest -q
 ```
 
-The component resolves the Langflow base class at import time and falls back to a local stub when Langflow is not installed, so the package imports and the test suite runs without a full Langflow install.
+The development extra installs `lfx` 1.12.0, the framework used for the component evaluator and output dispatcher, without the full Langflow application. Tests require real framework types and exercise SDK 0.10.10 request serialization with HTTP intercepted. No Asqav or model-provider request is made. This does not establish a complete browser/server flow or cryptographic verification.
+
+When neither host import path loads, `_compat.py` provides small fallback classes so ordinary package imports can work without Langflow. Those classes do not reproduce host validation or dispatch and are not evidence of Langflow compatibility.
 
 ## License
 
-MIT
+[Elastic License 2.0](LICENSE).
